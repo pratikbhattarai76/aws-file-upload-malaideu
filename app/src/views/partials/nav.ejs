@@ -1,0 +1,14 @@
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark">M</span>
+    <span>
+      <strong><%= appName %></strong>
+      <small>simple file drop</small>
+    </span>
+  </a>
+
+  <nav class="nav-links" aria-label="Primary">
+    <a class="<%= currentPath === '/' ? 'is-active' : '' %>" href="/">Drop</a>
+    <a class="<%= currentPath.startsWith('/files') ? 'is-active' : '' %>" href="/files">Library</a>
+  </nav>
+</header>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("partials/head", { pageTitle }) %>
+  <body>
+    <main class="page-shell">
+      <%- include("partials/nav") %>
+
+      <section class="panel empty-state error-state">
+        <p class="eyebrow">Error</p>
+        <h1><%= heading %></h1>
+        <p><%= message %></p>
+        <a class="button" href="/">Back to home</a>
+      </section>
+    </main>
+  </body>
+</html>
