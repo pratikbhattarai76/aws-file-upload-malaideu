@@ -4,9 +4,18 @@
 
   vars:
     app_name: aws_file_upload_MalaiDeu
-    app_path: /home/ubuntu/{{ app_name }}
+    base_path: /home/ubuntu/docker
+    app_path: "{{ base_path }}/{{ app_name }}"
 
   tasks:
+    - name: Ensure base docker directory exists
+      file:
+        path: "{{ base_path }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
     - name: Ensure app directory exists
       file:
         path: "{{ app_path }}"
@@ -15,7 +24,7 @@
         group: ubuntu
         mode: "0755"
 
-    - name: Copy app directory
+    - name: Copy app code directory
       copy:
         src: ../app/
         dest: "{{ app_path }}/app/"
@@ -23,7 +32,7 @@
         group: ubuntu
         mode: preserve
 
-    - name: Copy docker directory
+    - name: Copy the app docker directory
       copy:
         src: ../docker/
         dest: "{{ app_path }}/docker/"

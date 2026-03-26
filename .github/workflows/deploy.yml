@@ -1,0 +1,84 @@
+name: Verify, Build and Deploy Malaideu
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/pratikbhattarai76/malaideu
+
+jobs:
+
+  # Verify the docker image build
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          cd app/src
+          npm ci
+
+      - name: Check app starts (basic check)
+        run: |
+          cd app/src
+          node server.js &
+          sleep 5
+          curl -f http://localhost:3000/health
+
+  # After Verification Build again and Push to GHCR
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/pratikbhattarai76/malaideu:latest
+            ghcr.io/pratikbhattarai76/malaideu:${{ github.sha }}
+
+  # Deploy to EC2 instance
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
+            cd /home/ubuntu/docker/aws_file_upload_MalaiDeu &&
+            docker compose -f docker/docker-compose.yml pull &&
+            docker compose -f docker/docker-compose.yml up -d
+          '
