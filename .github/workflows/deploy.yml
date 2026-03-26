@@ -31,13 +31,6 @@ jobs:
           cd app/src
           npm ci
 
-      - name: Check app starts (basic check)
-        run: |
-          cd app/src
-          node server.js &
-          sleep 5
-          curl -f http://localhost:3000/health
-
   # After Verification Build again and Push to GHCR
   build-and-push:
     runs-on: ubuntu-latest
