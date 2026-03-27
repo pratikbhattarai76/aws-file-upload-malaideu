@@ -4,6 +4,9 @@ const {
   PutObjectCommand,
   S3Client,
 } = require("@aws-sdk/client-s3");
+const archiver = require("archiver");
+const { PassThrough } = require("stream");
+const { pipeline } = require("stream/promises");
 
 const env = require("../config/env");
 const {
@@ -16,6 +19,7 @@ const {
   normalizeSearch,
   parseDisplayNameFromKey,
   sanitizeDisplayName,
+  sanitizeFolderName,
   sanitizeFolderPath,
 } = require("../utils/file-utils");
 
@@ -183,6 +187,45 @@ const listFolderPaths = async () => {
   return folderPathCache.pending;
 };
 
+const listFolderObjectsPage = (folderPrefix, continuationToken) =>
+  s3.send(
+    new ListObjectsV2Command({
+      Bucket: env.storage.bucketName,
+      Prefix: folderPrefix,
+      MaxKeys: 1000,
+      ContinuationToken: continuationToken,
+    })
+  );
+
+const appendFolderObjectToArchive = async (archive, folderPrefix, archiveRoot, object) => {
+  if (!object.Key || !object.Key.startsWith(folderPrefix)) {
+    return;
+  }
+
+  const relativePath = object.Key.slice(folderPrefix.length);
+  const entryName = relativePath ? `${archiveRoot}/${relativePath}` : `${archiveRoot}/`;
+
+  if (object.Key.endsWith("/")) {
+    archive.append("", { name: entryName });
+    return;
+  }
+
+  const response = await s3.send(
+    new GetObjectCommand({
+      Bucket: env.storage.bucketName,
+      Key: object.Key,
+    })
+  );
+
+  if (!response.Body) {
+    throw new Error(`Storage returned an empty file stream for ${object.Key}`);
+  }
+
+  const entryStream = new PassThrough();
+  archive.append(entryStream, { name: entryName });
+  await pipeline(response.Body, entryStream);
+};
+
 const uploadFiles = async (files, options = {}) => {
   const displayNames = toArray(options.displayNames);
   const relativePaths = toArray(options.relativePaths);
@@ -266,6 +309,61 @@ const createFolders = async (folderNames, parentFolder = "") => {
   });
 };
 
+const getFolderArchive = async (folderPath) => {
+  const currentFolder = sanitizeFolderPath(folderPath);
+
+  if (!currentFolder) {
+    const error = new Error("Invalid folder path");
+    error.code = "INVALID_FOLDER_NAME";
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const folderPrefix = `${basePrefix}${currentFolder}/`;
+  const archiveRoot = sanitizeFolderName(currentFolder) || "folder";
+  const firstPage = await listFolderObjectsPage(folderPrefix);
+  const folderObjects = (firstPage.Contents || []).filter((object) => object.Key && object.Key.startsWith(folderPrefix));
+
+  if (!folderObjects.length) {
+    const error = new Error("Folder not found");
+    error.code = "FOLDER_NOT_FOUND";
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const archive = archiver("zip", { zlib: { level: 9 } });
+
+  const streamArchive = async () => {
+    let response = firstPage;
+
+    while (true) {
+      for (const object of response.Contents || []) {
+        await appendFolderObjectToArchive(archive, folderPrefix, archiveRoot, object);
+      }
+
+      if (!response.IsTruncated || !response.NextContinuationToken) {
+        break;
+      }
+
+      response = await listFolderObjectsPage(folderPrefix, response.NextContinuationToken);
+    }
+
+    await archive.finalize();
+  };
+
+  setImmediate(() => {
+    streamArchive().catch((error) => {
+      archive.destroy(error);
+    });
+  });
+
+  return {
+    body: archive,
+    contentType: "application/zip",
+    displayName: `${archiveRoot}.zip`,
+  };
+};
+
 const getFileById = async (fileId) => {
   const key = decodeFileId(fileId);
   const displayName = parseDisplayNameFromKey(key);
@@ -288,6 +386,7 @@ const getFileById = async (fileId) => {
 module.exports = {
   createFolders,
   getFileById,
+  getFolderArchive,
   listEntries,
   listFolderPaths,
   uploadFiles,

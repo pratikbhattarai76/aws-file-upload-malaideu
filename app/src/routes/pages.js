@@ -22,6 +22,10 @@ const toStorageMessage = (error, fallback) => {
     return "Enter a valid folder name.";
   }
 
+  if (error.code === "FOLDER_NOT_FOUND") {
+    return "That folder link is no longer valid.";
+  }
+
   if (error.name === "CredentialsProviderError") {
     return "Storage is unavailable right now. Please check the server credentials and try again.";
   }
@@ -223,6 +227,38 @@ router.get(
   "/files/:fileId/download",
   asyncHandler(async (req, res) => {
     await streamFile(req, res, "attachment");
+  })
+);
+
+router.get(
+  "/folders/download",
+  asyncHandler(async (req, res) => {
+    const folderPath = sanitizeFolderPath(req.query.folder);
+    const returnFolder = sanitizeFolderPath(req.query.returnFolder);
+
+    try {
+      const archive = await storage.getFolderArchive(folderPath);
+
+      res.setHeader("Content-Type", archive.contentType);
+      res.setHeader("Content-Disposition", buildContentDisposition("attachment", archive.displayName));
+
+      await pipeline(archive.body, res);
+    } catch (error) {
+      console.error("Folder download error:", error);
+
+      if (res.headersSent) {
+        res.destroy(error);
+        return;
+      }
+
+      return redirectWithMessage(
+        res,
+        "/files",
+        "error",
+        toStorageMessage(error, "We could not download that folder."),
+        { folder: returnFolder }
+      );
+    }
   })
 );
 

@@ -54,6 +54,12 @@
           </div>
 
           <div class="folder-toolbar-actions">
+            <% if (currentFolder) { %>
+              <a
+                class="button button-ghost"
+                href="/folders/download?folder=<%= encodeURIComponent(currentFolder) %>&returnFolder=<%= encodeURIComponent(currentFolder) %>"
+              >Download folder</a>
+            <% } %>
             <a class="button button-secondary" href="<%= uploadHref %>">Upload here</a>
           </div>
         </div>
@@ -156,6 +162,10 @@
 
                 <div class="file-actions">
                   <a class="button button-secondary" href="/files?folder=<%= encodeURIComponent(folder.path) %>">Open folder</a>
+                  <a
+                    class="button button-ghost"
+                    href="/folders/download?folder=<%= encodeURIComponent(folder.path) %><%= currentFolder ? `&returnFolder=${encodeURIComponent(currentFolder)}` : "" %>"
+                  >Download</a>
                 </div>
               </article>
             <% }) %>
