@@ -111,6 +111,7 @@ Restart container
 * HTTPS enabled using Cloudflare Flexible SSL
 * Environment variables stored securely on the server
 * Application interacts with S3 using an IAM role (no hardcoded credentials)
+* Large uploads may need a higher app timeout than Node's default 5 minutes. This image sets `UPLOAD_REQUEST_TIMEOUT_MS=1800000` (30 minutes) and supports an optional `UPLOAD_MAX_FILE_SIZE_MB` cap.
 
 ---
 

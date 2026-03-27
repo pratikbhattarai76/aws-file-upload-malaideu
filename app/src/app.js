@@ -47,7 +47,18 @@ app.use((error, req, res, next) => {
   const folder = sanitizeFolderPath(req.body?.folder);
 
   if (error instanceof multer.MulterError) {
-    return redirectWithMessage(res, "/", "error", "The upload request could not be processed. Please try again.", {
+    const message =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "That file is larger than this server allows. Increase UPLOAD_MAX_FILE_SIZE_MB or choose a smaller file."
+        : "The upload request could not be processed. Please try again.";
+
+    if (isXmlHttpRequest) {
+      return res.status(error.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+        error: message,
+      });
+    }
+
+    return redirectWithMessage(res, "/", "error", message, {
       folder,
     });
   }

@@ -5,6 +5,10 @@ const server = app.listen(env.port, "0.0.0.0", () => {
   console.log(`${env.appName} running on port ${env.port}`);
 });
 
+server.requestTimeout = env.server.requestTimeoutMs;
+server.keepAliveTimeout = env.server.keepAliveTimeoutMs;
+server.headersTimeout = Math.max(server.keepAliveTimeout + 1000, 60 * 1000);
+
 server.on("error", (error) => {
   if (error.code === "EADDRINUSE") {
     console.error(

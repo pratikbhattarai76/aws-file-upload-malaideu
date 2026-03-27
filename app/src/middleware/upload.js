@@ -4,11 +4,13 @@ const multer = require("multer");
 const os = require("os");
 const path = require("path");
 
+const env = require("../config/env");
+
 const uploadTempDir = path.join(os.tmpdir(), "malaideu-uploads");
 
 fs.mkdirSync(uploadTempDir, { recursive: true });
 
-module.exports = multer({
+const uploadConfig = {
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, uploadTempDir);
@@ -18,4 +20,12 @@ module.exports = multer({
       cb(null, `${Date.now()}-${crypto.randomUUID()}${safeExtension}`);
     },
   }),
-});
+};
+
+if (env.upload.maxFileSizeBytes > 0) {
+  uploadConfig.limits = {
+    fileSize: env.upload.maxFileSizeBytes,
+  };
+}
+
+module.exports = multer(uploadConfig);
