@@ -1,4 +1,4 @@
-variable "aws region" {
+variable "aws_region" {
   description = "AWS Region"
   type        = string
 }
@@ -19,5 +19,14 @@ variable "key_name" {
   type        = string
 }
 
+variable "s3_bucket_name" {
+  description = "S3 Bucker Name"
+  type        = string
+}
+
+variable "ssh_cidr" {
+  description = "CIDR block allowed to SSH"
+  type        = string
+}
 
 
