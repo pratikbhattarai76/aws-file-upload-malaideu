@@ -2,12 +2,14 @@
 
 The application is deployed on an AWS EC2 instance using Docker.
 
+
 ## How Deployment Works
 
-1. The application is containerized using a Dockerfile.
-2. A docker-compose.yml file is used to define and run the container.
-3. The container exposes the application on port 80.
-4. The EC2 instance serves incoming traffic from the internet.
+1. The application is packaged into a Docker image.
+2. GitHub Actions builds and pushes the image to GHCR.
+3. The EC2 server pulls the latest image from GHCR.
+4. Docker Compose updates the running container.
+5. The application becomes available through Cloudflare.
 
 ## Important Points
 

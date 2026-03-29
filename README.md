@@ -1,7 +1,8 @@
 # 🚀 MalaiDeu – AWS File Upload & Storage System
 
-A cloud-based file upload system where users can upload and retrieve files using AWS S3.  
-The application is built with Node.js and Express, containerized with Docker, and deployed using a CI/CD pipeline with GitHub Actions.
+A cloud-based file upload and storage system built on AWS, demonstrating end-to-end DevOps practices including Infrastructure as Code, containerized deployment, and automated CI/CD pipelines.
+
+The application allows users to upload, organize, browse, and retrieve files using Amazon S3 through a Node.js and Express backend. It is deployed on AWS EC2 using Docker, automated through GitHub Actions, and exposed securely through Cloudflare.
 
 ---
 
@@ -15,20 +16,22 @@ https://malaideu.pratik-labs.xyz
 
 This project demonstrates an end-to-end DevOps workflow, covering:
 
-* Cloud infrastructure (AWS EC2, S3, IAM)
-* Containerized application deployment (Docker)
-* Automated CI/CD pipeline (GitHub Actions)
-* Image registry integration (GHCR)
-* Domain routing and HTTPS (Cloudflare)
+- Infrastructure as Code (Terraform – AWS EC2, S3, IAM, Security Groups)
+- Containerized application deployment (Docker)
+- Automated CI/CD pipeline (GitHub Actions)
+- Image registry integration (GHCR)
+- Domain routing and HTTPS (Cloudflare)
+
+This project follows a cloud-native deployment approach where infrastructure, application, and delivery pipelines are separated and automated.
 
 ---
 
 ## ✨ Features
 
 - Upload multiple files through the web interface
-- Upload a folder from your device and keep its folder structure
-- Create folders and nested folders from the website
-- Upload files into a selected folder for better organization
+- Upload folders while preserving folder structure
+- Create folders and nested folders
+- Upload files into selected folders for organization
 - Store files securely in AWS S3
 - Browse folders, open files, and download files
 - Rename files before upload
@@ -46,7 +49,6 @@ From the project root:
 npm install
 npm start
 ```
-
 ---
 
 ## 🏗️ Architecture
@@ -70,15 +72,16 @@ S3 Bucket
 
 ## ⚙️ Tech Stack
 
-- **Cloud:** AWS EC2, AWS S3, IAM  
-- **Backend:** Node.js, Express.js  
-- **Templating:** EJS  
-- **File Handling:** Multer  
-- **Cloud SDK:** AWS SDK v3  
-- **Containerization:** Docker, Docker Compose  
-- **CI/CD:** GitHub Actions, GHCR  
-- **Automation:** Ansible  
-- **Networking & Security:** Cloudflare (DNS + SSL)
+- Infrastructure as Code: Terraform
+- Cloud: AWS EC2, AWS S3, IAM
+- Backend: Node.js, Express.js
+- Templating: EJS
+- File Handling: Multer
+- Cloud SDK: AWS SDK v3
+- Containerization: Docker, Docker Compose
+- CI/CD: GitHub Actions, GHCR
+- Automation: Ansible
+- Networking & Security: Cloudflare (DNS + SSL)
 
 ---
 
@@ -89,38 +92,52 @@ On every push to the main branch:
 ```text
 git push
     ↓
-GitHub Actions runs pipeline
+GitHub Actions runs workflow
+    ↓
+Install dependencies (verification step)
     ↓
 Build Docker image
     ↓
 Push image to GHCR
     ↓
-SSH into EC2
+GitHub Actions connects to EC2 over SSH
     ↓
-Pull latest image
+EC2 runs docker compose pull
     ↓
-Restart container
+EC2 restarts the container
 ```
 
 ---
 
 ## 🌐 Deployment Details
 
-* Application runs on AWS EC2 using Docker
-* Domain managed via Cloudflare
-* HTTPS enabled using Cloudflare Flexible SSL
-* Environment variables stored securely on the server
-* Application interacts with S3 using an IAM role (no hardcoded credentials)
-* Large uploads may need a higher app timeout than Node's default 5 minutes. This image sets `UPLOAD_REQUEST_TIMEOUT_MS=1800000` (30 minutes) and supports an optional `UPLOAD_MAX_FILE_SIZE_MB` cap.
+- Application runs on AWS EC2 using Docker
+- Domain managed via Cloudflare
+- HTTPS enabled using Cloudflare Flexible SSL
+- Environment variables stored securely on the server
+- Application interacts with S3 using an IAM role (no hardcoded credentials)
+
+---
+
+## 🏗️ Infrastructure as Code
+AWS infrastructure for this project is defined using Terraform
+Terraform provisions:
+- EC2 instance
+- S3 bucket
+- IAM role
+- IAM instance profile
+- Security group
+
+This allows the infrastructure to be recreated from code instead of being configured manually through the AWS console.
 
 ---
 
 ## 🧠 What I Learned
-
+- How to provision AWS infrastructure through code using Terraform
 - How to deploy a real application on AWS using Docker
-- Difference between building locally vs deploying using images
-- How CI/CD automates deployment
-- How IAM roles are used instead of hardcoding credentials
-- Basics of DNS and HTTPS using Cloudflare
+- The difference between infrastructure provisioning and server configuration
+- How CI/CD automates image build and deployment
+- How IAM roles replace hardcoded credentials
+- How DNS and HTTPS are handled through Cloudflare
 
 ---
