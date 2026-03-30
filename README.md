@@ -12,6 +12,12 @@ https://malaideu.pratik-labs.xyz
 
 ---
 
+## Architecture Diagram
+
+![Flow Architecture](docs/architecture/architecture.png)
+
+---
+
 ## 📌 Project Overview
 
 This project demonstrates an end-to-end DevOps workflow, covering:
