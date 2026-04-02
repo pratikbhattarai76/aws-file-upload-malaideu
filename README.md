@@ -13,7 +13,7 @@ https://malaideu.pratik-labs.xyz
 ---
 
 ## Architecture Diagram
-
+The following diagram illustrates the end-to-end system architecture:
 ![Flow Architecture](docs/architecture/architecture.png)
 
 ---
@@ -52,6 +52,7 @@ This project follows a cloud-native deployment approach where infrastructure, ap
 From the project root:
 
 ```bash
+cd app/src
 npm install
 npm start
 ```
