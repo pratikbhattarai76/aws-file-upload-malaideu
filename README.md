@@ -2,7 +2,7 @@
 
 A cloud-based file upload and storage system built on AWS, demonstrating end-to-end DevOps practices including Infrastructure as Code, containerized deployment, and automated CI/CD pipelines.
 
-The application allows users to upload, organize, browse, and retrieve files using Amazon S3 through a Node.js and Express backend. It is deployed on AWS EC2 using Docker, automated through GitHub Actions, and exposed securely through Cloudflare.
+The application allows users to upload, organize, browse, and retrieve files using Amazon S3 through a Node.js and Express backend. It is deployed on AWS using Docker, provisioned with Terraform, configured with Ansible, and exposed through a load-balanced architecture.
 
 ---
 
@@ -13,22 +13,25 @@ https://malaideu.pratik-labs.xyz
 ---
 
 ## Architecture Diagram
+
 The following diagram illustrates the end-to-end system architecture:
+
 ![Flow Architecture](docs/architecture/architecture.png)
 
 ---
 
 ## 📌 Project Overview
 
-This project demonstrates an end-to-end DevOps workflow, covering:
+This project demonstrates a complete DevOps workflow, covering:
 
-- Infrastructure as Code (Terraform – AWS EC2, S3, IAM, Security Groups)
+- Infrastructure as Code (Terraform – EC2, ALB, S3, IAM, Security Groups)
+- Configuration Management (Ansible – server bootstrap & deployment setup)
 - Containerized application deployment (Docker)
 - Automated CI/CD pipeline (GitHub Actions)
 - Image registry integration (GHCR)
-- Domain routing and HTTPS (Cloudflare)
+- Domain routing and HTTPS (Cloudflare + AWS ALB)
 
-This project follows a cloud-native deployment approach where infrastructure, application, and delivery pipelines are separated and automated.
+The system separates infrastructure, configuration, and application deployment for maintainability and scalability.
 
 ---
 
@@ -36,10 +39,10 @@ This project follows a cloud-native deployment approach where infrastructure, ap
 
 - Upload multiple files through the web interface
 - Upload folders while preserving folder structure
-- Create folders and nested folders
-- Upload files into selected folders for organization
+- Create and manage nested folders
+- Upload files into selected folders
 - Store files securely in AWS S3
-- Browse folders, open files, and download files
+- Browse, download, and manage uploaded files
 - Rename files before upload
 - Server-side rendering using EJS
 - Containerized deployment using Docker
@@ -49,8 +52,6 @@ This project follows a cloud-native deployment approach where infrastructure, ap
 
 ## 💻 Local Run
 
-From the application directory:
-
 ```bash
 cd app/src
 npm install
@@ -59,16 +60,23 @@ npm start
 ---
 
 ## 🏗️ Architecture
-The application follows a simple request flow from user to cloud storage:
+
+### Request Flow
 
 ```text
-User (HTTPS)
+User
     ↓
 Cloudflare
+    ↓
+AWS Application Load Balancer
+    ↓
+Target Group
     ↓
 EC2 Instance
     ↓
 Docker Container
+    ↓
+Malaideu Application
     ↓
 AWS SDK
     ↓
@@ -77,74 +85,113 @@ S3 Bucket
 
 ---
 
+## 🔐 Security & Networking
+
+- The Application Load Balancer (ALB) acts as the public entry point and handles all incoming traffic
+- Security Groups are configured to enforce strict access control:
+  - ALB allows inbound traffic on ports **80 (HTTP)** and **443 (HTTPS)** from the internet
+  - EC2 instance allows application traffic only from the ALB security group
+- Direct public access to the application port is restricted, ensuring traffic flows only through the ALB
+- SSH access is controlled via a configurable CIDR block for secure administrative access
+- IAM role is attached to the EC2 instance to securely interact with AWS services
+- No AWS credentials are stored in the application code or repository
+- Cloudflare is used for DNS resolution and acts as an additional security layer at the edge
+
+---
+
 ## ⚙️ Tech Stack
 
-- Infrastructure as Code: Terraform
-- Cloud: AWS EC2, AWS S3, IAM
-- Backend: Node.js, Express.js
-- Templating: EJS
-- File Handling: Multer
-- Cloud SDK: AWS SDK v3
-- Containerization: Docker, Docker Compose
-- CI/CD: GitHub Actions, GHCR
-- Automation: Ansible
-- Networking & Security: Cloudflare (DNS + SSL)
+- **Infrastructure as Code:** Terraform
+- **Configuration Management:** Ansible
+- **Cloud Services:** AWS EC2, S3, IAM, ALB
+- **Backend:** Node.js, Express.js
+- **Templating Engine:** EJS
+- **File Handling:** Multer
+- **Cloud SDK:** AWS SDK v3
+- **Containerization:** Docker, Docker Compose
+- **CI/CD:** GitHub Actions, GHCR
+- **Networking & Security:** Cloudflare
 
 ---
 
 ## 🚀 CI/CD Workflow
 
-On every push to the main branch:
+On every push to the `main` branch:
 
 ```text
 git push
     ↓
-GitHub Actions runs workflow
+GitHub Actions workflow triggered
     ↓
 Install dependencies (verification step)
     ↓
 Build Docker image
     ↓
-Push image to GHCR
+Push image to GitHub Container Registry (GHCR)
     ↓
-GitHub Actions connects to EC2 over SSH
+SSH into EC2 instance
     ↓
-EC2 runs docker compose pull
+Pull latest image
     ↓
-EC2 restarts the container
+Restart container using Docker Compose
 ```
 
 ---
 
 ## 🌐 Deployment Details
 
-- Application runs on AWS EC2 using Docker
-- Domain managed via Cloudflare
-- HTTPS enabled using Cloudflare Flexible SSL
-- Environment variables stored securely on the server
-- Application interacts with S3 using an IAM role (no hardcoded credentials)
+- Application is deployed on an AWS EC2 instance using Docker
+- AWS Application Load Balancer (ALB) acts as the public entry point and distributes incoming traffic
+- Domain is managed via Cloudflare DNS and points to the ALB
+- HTTPS is configured manually using AWS ACM and an ALB HTTPS listener
+- HTTP traffic is redirected to HTTPS at the load balancer level
+- Application is exposed on EC2 port 8080 and mapped to container port 3000
+- Environment variables are securely stored on the server and not committed to the repository
+- Application interacts with S3 using an IAM role attached to the EC2 instance (no hardcoded credentials)
 
 ---
 
 ## 🏗️ Infrastructure as Code
-AWS infrastructure for this project is defined using Terraform
-Terraform provisions:
-- EC2 instance
-- S3 bucket
-- IAM role
-- IAM instance profile
-- Security group
 
-This allows the infrastructure to be recreated from code instead of being configured manually through the AWS console.
+Infrastructure is defined using Terraform.
+
+Terraform provisions:
+
+- EC2 instance (application server)
+- Application Load Balancer (ALB)
+- Target Group for routing traffic
+- S3 bucket for file storage
+- IAM role and instance profile for secure access
+- Security groups for controlled network access
+
+This ensures reproducible infrastructure and avoids manual configuration.
+
+---
+
+## ⚙️ Configuration Management
+
+Ansible is used after provisioning to configure the EC2 instance:
+
+- Installs Docker and required dependencies
+- Configures Docker environment
+- Creates application directories
+- Copies Docker Compose and environment files
+- Prepares the server for deployment
 
 ---
 
 ## 🧠 What I Learned
-- How to provision AWS infrastructure through code using Terraform
-- How to deploy a real application on AWS using Docker
-- The difference between infrastructure provisioning and server configuration
-- How CI/CD automates image build and deployment
-- How IAM roles replace hardcoded credentials
-- How DNS and HTTPS are handled through Cloudflare
 
+- Designing and deploying a real-world cloud architecture on AWS
+- Using Terraform to provision infrastructure declaratively
+- Separating infrastructure provisioning and server configuration
+- Deploying containerized applications using Docker
+- Understanding ALB, target groups, and request routing
+- Implementing CI/CD pipelines for automated deployment
+- Using IAM roles instead of hardcoded credentials
+- Managing DNS and HTTPS in production environments
+
+## Future Improvements
+- Convert HTTPS setup into fully terraform
 ---
+

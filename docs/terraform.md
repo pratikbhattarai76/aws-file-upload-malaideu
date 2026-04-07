@@ -5,10 +5,12 @@ This project uses Terraform to provision the AWS infrastructure required by the 
 ## What Terraform Manages
 
 - EC2 instance
+- Application Load Balancer (ALB)
+- Target Group
 - S3 bucket
 - IAM role
 - IAM instance profile
-- Security group
+- Security groups
 
 ## Terraform File Structure
 
@@ -27,10 +29,10 @@ This project uses Terraform to provision the AWS infrastructure required by the 
 Defines Terraform version requirements and provider version constraints.
 
 ### `providers.tf`
-Configures the AWS provider and region.
+Configures the AWS provider and region where the infrastructure will be used.
 
 ### `main.tf`
-Defines the AWS resources to create, such as the EC2 instance, S3 bucket, IAM role, instance profile, and security group.
+Defines the AWS resources to create, such as the EC2 instance, ALB, Target Group, S3 bucket, IAM role, instance profile, and security groups.
 
 ### `variables.tf`
 Declares the input variables used by the configuration.
@@ -39,7 +41,7 @@ Declares the input variables used by the configuration.
 Stores the actual values assigned to those variables for this environment.
 
 ### `outputs.tf`
-Displays useful values after the infrastructure is created, such as the EC2 public IP, bucket name, IAM role name, and security group ID.
+Displays useful values after the infrastructure is created, such as the EC2 public IP, and ALB DNS name.
 
 ## Terraform Workflow
 
@@ -53,9 +55,9 @@ terraform apply
 
 ## What This Means
 
-- `terraform init` initializes the working directory and downloads required provider plugins  
-- `terraform plan` shows what Terraform intends to create, modify, or destroy  
-- `terraform apply` creates the infrastructure in AWS based on the configuration  
+- `terraform init` initializes the working directory and downloads required provider plugins
+- `terraform plan` shows what Terraform intends to create, modify, or destroy
+- `terraform apply` creates the infrastructure in AWS based on the configuration
 
 
 ## Why Terraform Was Used
@@ -64,10 +66,10 @@ terraform apply
 - Makes infrastructure reproducible and consistent
 - Allows infrastructure to be version-controlled
 - Separates infrastructure provisioning from application deployment
-- Aligns with real-world DevOps and cloud practices
+- Aligns with real-world DevOps and cloud engineering projects
 
 ## How Terraform Fits Into This Project
-
+```text
 Terraform
     ↓
 Creates AWS Infrastructure
@@ -75,6 +77,7 @@ Creates AWS Infrastructure
 EC2 + S3 + IAM + Security Group
     ↓
 Application Deployment Uses That Infrastructure
+```
 
 ## Practical Role in This Project
 
@@ -82,16 +85,20 @@ Terraform is responsible for provisioning the AWS infrastructure required by the
 
 It creates:
 
-- EC2 instance (application server)
-- S3 bucket (file storage)
-- IAM role and instance profile (secure AWS access)
-- Security group (network access control)
+- EC2 instance
+- Application Load Blancer
+- Target Group
+- S3 bucket
+- IAM role and instance profile
+- Security group
 
 After the infrastructure is created:
 
+- Ansible configures the EC2 instance
 - Docker runs the application inside a container
 - GitHub Actions builds and pushes the Docker image
 - EC2 pulls the latest image and runs it
-- IAM allows secure interaction with S3 without storing credentials
+- The ALB forwards traffic to the application
+- IAM allows secure interaction with S3 without hardcoding credentials
 
 This separation keeps infrastructure provisioning and application delivery clean, automated, and maintainable.

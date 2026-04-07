@@ -4,13 +4,19 @@ This project follows a simple flow from user request to cloud storage.
 
 ## Flow
 ```text
-User (HTTPS)
+User
     ↓
 Cloudflare
     ↓
+AWS Application Load Balancer
+    ↓
+Target Group
+    ↓
 EC2 Instance
     ↓
-Docker Container (Node.js App)
+Docker Container
+    ↓
+Malaideu Application
     ↓
 AWS SDK
     ↓

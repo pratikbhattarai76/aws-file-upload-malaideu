@@ -6,7 +6,9 @@ This project uses AWS services for hosting the application and storing uploaded 
 
 - Used to host the application
 - Runs Docker and Docker Compose
-- Exposes the application on port 80 to the internet
+- ALB is the public entry point
+- Receives app traffic from ALB on port 8080
+- EC2 is not the main public application end point.
 - Uses and attached IAM instance profile for AWS access
 
 ## S3
@@ -23,10 +25,9 @@ This project uses AWS services for hosting the application and storing uploaded 
 
 ## Security Group
 
-- Allows SSH access on port 22
-- Allows HTTP access on port 80
-- Allows HTTPS access on port 443
-- Controls network access to the EC2 instance
+- There are two security groups:
+  - ALB SG for 80/443
+  - EC2 SG for 22 and app port from ALB only.
 
 ## Why IAM Roles?
 
