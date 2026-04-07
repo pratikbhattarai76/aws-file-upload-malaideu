@@ -1,0 +1,48 @@
+# This config is for copying and running the test nginx:alpine base image runned application for the multi-routing testing AWS.
+
+- name: Prepare deployment folder for test routing app
+  hosts: aws
+  become: true
+
+  vars:
+    app_name: test_multi_service_routing_nginx
+    base_path: /home/ubuntu/docker
+    app_path: "{{ base_path }}/{{ app_name }}"
+
+  tasks:
+    - name: Ensure base docker directory exists
+      file:
+        path: "{{ base_path }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
+    - name: Ensure test app directory exists
+      file:
+        path: "{{ app_path }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
+    - name: Copy compose.yml for test app
+      copy:
+        src: ../test_multi_service_routing_nginx/compose.yml
+        dest: "{{ app_path }}/compose.yml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+
+    - name: Copy index.html for test app
+      copy:
+        src: ../test_multi_service_routing_nginx/index.html
+        dest: "{{ app_path }}/index.html"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+
+    - name: Start test app with Docker Compose
+      command: docker compose up -d
+      args:
+        chdir: "{{ app_path }}"
