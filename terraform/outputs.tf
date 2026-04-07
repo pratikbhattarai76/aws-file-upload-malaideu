@@ -1,3 +1,5 @@
+# These are values that Terraform prints after "terraform apply"
+
 output "ec2_ip" {
   value = aws_instance.devops_server.public_ip
 }

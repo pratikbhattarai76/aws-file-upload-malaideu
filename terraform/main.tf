@@ -1,7 +1,12 @@
+# VPC
+# This looks for existing default VPC in my AWS account.
+# I did this because i didnt want to create custom networking from scratch yet, so I reused AWS default networking.
 data "aws_vpc" "default" {
   default = true
 }
 
+# VPC Subnet
+# Again it finds the subnets inside the default VPC.
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -9,8 +14,8 @@ data "aws_subnets" "default" {
   }
 }
 
-
-# S3
+#S3
+# This creates an S3 bucket so my app can upload/store files there.
 resource "aws_s3_bucket" "uploads" {
   bucket = var.s3_bucket_name
 
@@ -22,6 +27,8 @@ resource "aws_s3_bucket" "uploads" {
 
 
 # ALB Security Group
+# This is the firewall for the Application Load Balancer (ALB), which allows public HTTPS in port 80 and HTTPS on 443
+# This is my public entry point which users need to reach my services.
 resource "aws_security_group" "devops_alb_sg" {
   name   = "devops-alb-sg"
   vpc_id = data.aws_vpc.default.id
@@ -49,6 +56,7 @@ resource "aws_security_group" "devops_alb_sg" {
 }
 
 # EC2 Security Group
+# This is the firewall for EC2 instance, which allows SSH on port 22 and app traffic for malaideu application which is host mapped to the defined port variable in terraform.tfvars and is accessible from only the ALB Security Group
 resource "aws_security_group" "devops_server_sg" {
   name   = "devops-server-sg"
   vpc_id = data.aws_vpc.default.id
@@ -78,7 +86,8 @@ resource "aws_security_group" "devops_server_sg" {
 }
 
 
-# IAM Role (shared)
+# IAM Role
+# This creates an IAM role that EC2 is allowed to use, for the EC2 instance can access AWS services without storing hardcoded keys in the environment variables or in the code.
 resource "aws_iam_role" "devops_server_role" {
   name = "devops-server-role"
 
@@ -92,17 +101,23 @@ resource "aws_iam_role" "devops_server_role" {
   })
 }
 
+# S3 Policy Attach
+# This gives the role permission to use S3
+# It allows the EC2 server identity to access S3.
 resource "aws_iam_role_policy_attachment" "s3_access" {
   role       = aws_iam_role.devops_server_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+# Instance Profile
+# EC2 doesnt attach IAM roles directly, it attaches an instance profile, which uses the role.
 resource "aws_iam_instance_profile" "devops_server_profile" {
   name = "devops-server-profile"
   role = aws_iam_role.devops_server_role.name
 }
 
-# EC2 Instance (shared)
+# EC2 Instance
+# This creates the Virtual Machine.
 resource "aws_instance" "devops_server" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
@@ -118,6 +133,7 @@ resource "aws_instance" "devops_server" {
 
 
 # Target Group
+# This is the backend for the ALB, which tells AWS to use the http web protocol and the port to send traffic to and backend type and also the health checking
 resource "aws_lb_target_group" "malaideu_tg" {
   name        = "malaideu-tg"
   port        = var.malaideu_port
@@ -131,6 +147,10 @@ resource "aws_lb_target_group" "malaideu_tg" {
   }
 }
 
+# Attaching EC2 to target group
+# This registers the EC2 instance in the target group.
+# Without this the target group exists but has no server inside it.
+# In simple words this says add the EC2 server to the target group list
 resource "aws_lb_target_group_attachment" "malaideu_attach" {
   target_group_arn = aws_lb_target_group.malaideu_tg.arn
   target_id        = aws_instance.devops_server.id
@@ -139,7 +159,7 @@ resource "aws_lb_target_group_attachment" "malaideu_attach" {
 
 
 # ALB
-
+# This creates an public Application Load Balancer, which is the public traffic entry point.
 resource "aws_lb" "devops_alb" {
   name               = "devops-alb"
   load_balancer_type = "application"
@@ -149,6 +169,7 @@ resource "aws_lb" "devops_alb" {
 
 
 # Listener
+# This defines what the ALB does when the traffic arrives on port 80.
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.devops_alb.arn
   port              = 80
