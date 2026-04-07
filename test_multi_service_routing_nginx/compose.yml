@@ -1,0 +1,11 @@
+services:
+  test-app:
+    image: nginx:alpine
+    container_name: test-app
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    mem_limit: 128m
+    cpus: 0.2

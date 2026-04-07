@@ -30,8 +30,34 @@ This project demonstrates a complete DevOps workflow, covering:
 - Automated CI/CD pipeline (GitHub Actions)
 - Image registry integration (GHCR)
 - Domain routing and HTTPS (Cloudflare + AWS ALB)
+- Multi-Service routing
 
 The system separates infrastructure, configuration, and application deployment for maintainability and scalability.
+
+---
+
+## 🔀 Multi-Service Routing
+
+This project also demonstrates host-based routing using a single AWS Application Load Balancer (ALB).
+
+Two services are deployed behind the same ALB:
+
+- `malaideu.pratik-labs.xyz` → Main application (Node.js app on port 8080)
+- `test.pratik-labs.xyz` → Test application (Nginx container on port 8081)
+
+The ALB uses host header rules to route traffic to the correct target group.
+
+### Routing Flow
+
+```text
+User request
+    ↓
+Cloudflare DNS
+    ↓
+AWS ALB (HTTPS 443)
+malaideu.pratik-labs.xyz → malaideu-tg → EC2:8080
+test.pratik-labs.xyz     → test-tg     → EC2:8081
+```
 
 ---
 
@@ -187,6 +213,10 @@ Ansible is used after provisioning to configure the EC2 instance:
 - Separating infrastructure provisioning and server configuration
 - Deploying containerized applications using Docker
 - Understanding ALB, target groups, and request routing
+- Implementing host-based routing using AWS ALB
+- Serving multiple applications behind a single load balancer
+- Understanding listener rules, pririties, and target groups
+- Applying container resource limits in Docker Compose
 - Implementing CI/CD pipelines for automated deployment
 - Using IAM roles instead of hardcoded credentials
 - Managing DNS and HTTPS in production environments

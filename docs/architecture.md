@@ -32,3 +32,26 @@ S3 Bucket
 - The backend uses the AWS SDK to upload and retrieve files from S3.
 - Files are stored in an S3 bucket.
 
+
+## 🔀 Multi-Service Routing
+
+This project also demonstrates host-based routing using a single AWS Application Load Balancer (ALB).
+
+Two services are deployed behind the same ALB:
+
+- `malaideu.pratik-labs.xyz` → Main application (Node.js app on port 8080)
+- `test.pratik-labs.xyz` → Test application (Nginx container on port 8081)
+
+The ALB uses host header rules to route traffic to the correct target group.
+
+### Routing Flow
+
+```text
+User request
+    ↓
+Cloudflare DNS
+    ↓
+AWS ALB (HTTPS 443)
+malaideu.pratik-labs.xyz → malaideu-tg → EC2:8080
+test.pratik-labs.xyz     → test-tg     → EC2:8081
+```
