@@ -206,7 +206,7 @@ const streamFile = async (req, res, disposition) => {
     res.setHeader("Content-Type", file.contentType);
     res.setHeader("Content-Disposition", buildContentDisposition(disposition, file.displayName));
 
-    if (file.contentLength) {
+    if (typeof file.contentLength === "number") {
       res.setHeader("Content-Length", String(file.contentLength));
     }
 

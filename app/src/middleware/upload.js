@@ -20,12 +20,10 @@ const uploadConfig = {
       cb(null, `${Date.now()}-${crypto.randomUUID()}${safeExtension}`);
     },
   }),
+  limits: {
+    files: Infinity,
+    ...(env.upload.maxFileSizeBytes > 0 ? { fileSize: env.upload.maxFileSizeBytes } : {}),
+  },
 };
-
-if (env.upload.maxFileSizeBytes > 0) {
-  uploadConfig.limits = {
-    fileSize: env.upload.maxFileSizeBytes,
-  };
-}
 
 module.exports = multer(uploadConfig);

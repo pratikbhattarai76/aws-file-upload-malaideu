@@ -43,7 +43,9 @@ app.use((req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  const isXmlHttpRequest = String(req.get("x-requested-with") || "").toLowerCase() === "xmlhttprequest";
+  const isXmlHttpRequest =
+    String(req.get("x-requested-with") || "").toLowerCase() === "xmlhttprequest" ||
+    String(req.get("accept") || "").includes("application/json");
   const folder = sanitizeFolderPath(req.body?.folder);
 
   if (error instanceof multer.MulterError) {

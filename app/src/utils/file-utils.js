@@ -135,7 +135,7 @@ const decodeFileId = (token) => {
 const normalizeSearch = (value) => String(value || "").trim().toLowerCase();
 
 const formatBytes = (bytes = 0) => {
-  if (!bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
     return "0 B";
   }
 

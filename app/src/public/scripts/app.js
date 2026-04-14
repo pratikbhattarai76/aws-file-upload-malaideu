@@ -64,7 +64,7 @@ const getSelectedUploadLabel = () => {
   }
 
   const countLabel = fileCount === 1 ? "1 file selected" : `${fileCount} files selected`;
-  return totalBytes ? `${countLabel} / ${formatBytes(totalBytes)}` : countLabel;
+  return `${countLabel} / ${formatBytes(totalBytes)}`;
 };
 
 const setUploadProgressState = ({ hidden = false, status = "Ready to upload.", meta = getSelectedUploadLabel(), percent = 0, error = false } = {}) => {
@@ -520,7 +520,7 @@ if (uploadForm && submitButton) {
       hidden: false,
       percent: 0,
       status: "Starting upload...",
-      meta: totalBytes ? `${fileLabelText} queued / ${formatBytes(totalBytes)}` : `${fileLabelText} queued`,
+      meta: `${fileLabelText} queued / ${formatBytes(totalBytes)}`,
       error: false,
     });
 
@@ -536,7 +536,7 @@ if (uploadForm && submitButton) {
           hidden: false,
           percent: Number.NaN,
           status: "Uploading files...",
-          meta: totalBytes ? `${fileLabelText} in progress / about ${formatBytes(totalBytes)}` : `${fileLabelText} in progress`,
+          meta: `${fileLabelText} in progress / about ${formatBytes(totalBytes)}`,
           error: false,
         });
         return;

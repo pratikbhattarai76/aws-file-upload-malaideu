@@ -23,7 +23,9 @@ const redirectWithMessage = (res, pathname, type, message, extraParams = {}) => 
 
   const query = params.toString();
   const nextLocation = query ? `${pathname}?${query}` : pathname;
-  const isXmlHttpRequest = String(res.req?.get?.("x-requested-with") || "").toLowerCase() === "xmlhttprequest";
+  const isXmlHttpRequest =
+    String(res.req?.get?.("x-requested-with") || "").toLowerCase() === "xmlhttprequest" ||
+    String(res.req?.get?.("accept") || "").includes("application/json");
 
   if (isXmlHttpRequest) {
     return res.json({ redirectTo: nextLocation });
