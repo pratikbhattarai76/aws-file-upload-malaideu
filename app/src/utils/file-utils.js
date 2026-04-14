@@ -122,7 +122,7 @@ const decodeFileId = (token) => {
   const key = Buffer.from(token, "base64url").toString("utf8");
   const normalizedToken = Buffer.from(key, "utf8").toString("base64url");
 
-  if (!key || normalizedToken !== token || !key.includes("/")) {
+  if (!key || normalizedToken !== token) {
     const error = new Error("Invalid file id");
     error.code = "INVALID_FILE_ID";
     error.statusCode = 400;

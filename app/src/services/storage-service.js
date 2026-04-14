@@ -5,6 +5,7 @@ const {
   PutObjectCommand,
   S3Client,
 } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
 const archiver = require("archiver");
 const { unlink } = require("fs/promises");
 const { PassThrough } = require("stream");
@@ -344,15 +345,16 @@ const uploadFiles = async (files, options = {}) => {
       const displayName = createUniqueDisplayName(preferredName, existingNames);
       const key = buildObjectKey(displayName, prefix, fileFolderPath);
 
-      await s3.send(
-        new PutObjectCommand({
+      await new Upload({
+        client: s3,
+        params: {
           Bucket: env.storage.bucketName,
           Key: key,
           Body: createReadStream(file.path),
           ContentLength: file.size,
           ContentType: file.mimetype || "application/octet-stream",
-        })
-      );
+        },
+      }).done();
 
       uploadedFiles.push({
         id: encodeFileId(key),
